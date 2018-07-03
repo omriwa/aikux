@@ -1,0 +1,39 @@
+.App {
+  text-align: center;
+}
+
+.left-side .left-node {
+  text-align: left;
+}
+
+.right-side .right-node {
+  text-align: right;
+}
+
+.departments-circle {
+  fill: gray;
+  stroke: cornflowerblue;
+  stroke-width: 2;
+}
+
+svg {
+  width: 80%;
+  margin: auto;
+}
+
+.line {
+  stroke: gray;
+}
+
+.line-focus {
+  stroke: red;
+}
+
+.line:hover {
+  stroke: black;
+  stroke-width: 2;
+}
+
+text:hover {
+  fill: red;
+}
