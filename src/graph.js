@@ -53,33 +53,46 @@ export default class Graph extends Component {
         // set animation
         this.setHoverAnimation();
     }
+    
+    isLineConnectedToElement(lineNode,containerBox){
+         // checking the cors of connection of the lines and the elements
+                if (lineNode.attr('x1') <= (containerBox.x + containerBox.width) && containerBox.x <= lineNode.attr('x1') || 
+                    lineNode.attr('x2') <= (containerBox.x + containerBox.width) && containerBox.x <= lineNode.attr('x2'))
+                    if (lineNode.attr('y1') <= (containerBox.y + containerBox.height) && containerBox.y <= lineNode.attr('y1') ||
+                        lineNode.attr('y2') <= (containerBox.y + containerBox.height) && containerBox.y <= lineNode.attr('y2')
+                       )
+                       return true;
+        return false;
+    }
 
     setHoverAnimation() {
         // get all lines
         let lines = d3.selectAll('.line');
+        let graph = this;
         // get all containers
         let containers = d3.selectAll('.container').on('mouseover', function() {
             let containerBox = d3.select(this).node().getBBox();
             // check the lines that conected to the container
             let cLines = lines.filter(function(d, i) {
                 let lineNode = d3.select(this);
-                // checking the cors of the left side connection of the lines and the elements
-                if (lineNode.attr('x1') <= (containerBox.x + containerBox.width) && containerBox.x <= lineNode.attr('x1'))
-                    if (lineNode.attr('y1') <= (containerBox.y + containerBox.height + 5) && containerBox.y <= lineNode.attr('y1')) 
+                if(graph.isLineConnectedToElement(lineNode,containerBox))
                         return this;
-            
-            }).attr('class','line-focus');
-                        
-        }).on('mouseout', function() {
-            console.log('out')
+
+            }).classed('line-focus', true);
+
+        }).on('mouseout', function() {//set the hover red effect of the lines off
+            let containerBox = d3.select(this).node().getBBox();
+            // check the lines that conected to the container
+            let cLines = lines.filter(function(d, i) {
+                let lineNode = d3.select(this);
+                if(graph.isLineConnectedToElement(lineNode,containerBox))
+                        return this;
+
+            }).classed('line-focus', false);
         });
-        // get all lines that conected to the contatiner
-        // set the lines color to red
-        // get all the containers that are conected on the other side of the lines
-        // make the text inside the container red
     }
-    
-    connectLineElements(src,tar){
+
+    connectLineElements(src, tar) {
         d3.select('svg')
             .append('line')
             .attr('x1', src.x + src.width)
@@ -107,14 +120,14 @@ export default class Graph extends Component {
                     return dep;
             });
             // connect name to department
-            this.connectLineElements(names.node().getBBox(),department.node().parentNode.getBBox());
+            this.connectLineElements(names.node().getBBox(), department.node().parentNode.getBBox());
             // get the directories
             let directory = directoriesElement.filter((dir) => {
                 if (dir === d.Target.substring(1))
                     return dir;
             });
             // connect department to directory
-            this.connectLineElements(department.node().parentNode.getBBox(),directory.node().getBBox())
+            this.connectLineElements(department.node().parentNode.getBBox(), directory.node().getBBox())
         });
     }
 
