@@ -74,10 +74,13 @@ export default class Graph extends Component {
 
         d3.selectAll('text').on('click', function(clickedElement) {
             let connectElements = graph.getConnectedElements(clickedElement);
-            // d3.selectAll('.line').filter(function(){
-            //     if(graph)
-            // })
-            console.log(connectElements)
+            // hide all the other elements
+            d3.selectAll('.container').classed('hide',true);
+            Object.values(connectElements).forEach(function(nodes){
+                nodes.each(function(){
+                    d3.select(this).classed('hide',false)
+                });
+            })
         });
     }
 
