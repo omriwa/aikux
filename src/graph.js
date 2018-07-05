@@ -23,6 +23,7 @@ export default class Graph extends Component {
             departments = {},
             directories = {},
             output = { names: names, departments: departments, directories };
+
         data.forEach((d) => {
             names[d.Mitarbeitername] = null;
             departments[d.Abteilung] = null;
@@ -34,6 +35,7 @@ export default class Graph extends Component {
     getSvgHeight() {
         let max = 0,
             lengths = [Object.keys(this.state.names).length, Object.keys(this.state.departments).length, Object.keys(this.state.directories).length];
+
         lengths.forEach((length) => {
             if (max < length)
                 max = length
@@ -52,17 +54,72 @@ export default class Graph extends Component {
         this.connectElements();
         // set animation
         this.setHoverAnimation();
+        this.setClickAnimation();
+    }
+
+    isLineConnectedToElement(lineNode, containerBox) {
+        // checking the cors of connection of the lines and the elements
+        if (lineNode.attr('x1') <= (containerBox.x + containerBox.width) && containerBox.x <= lineNode.attr('x1') ||
+            lineNode.attr('x2') <= (containerBox.x + containerBox.width) && containerBox.x <= lineNode.attr('x2'))
+            if (lineNode.attr('y1') <= (containerBox.y + containerBox.height) && containerBox.y <= lineNode.attr('y1') ||
+                lineNode.attr('y2') <= (containerBox.y + containerBox.height) && containerBox.y <= lineNode.attr('y2')
+            )
+                return true;
+        return false;
+    }
+
+    setClickAnimation() {
+        let lines = d3.selectAll('.line'),
+            graph = this;
+
+        d3.selectAll('text').on('click', function(clickedElement) {
+            let connectElements = graph.getConnectedElements(clickedElement);
+            // d3.selectAll('.line').filter(function(){
+            //     if(graph)
+            // })
+            console.log(connectElements)
+        });
+    }
+
+    getConnectedElements(clickedElement) {
+        let relatedData = [], 
+            connectedElements = {
+            names: [],
+            departments: [],
+            directories: []
+        },
+        names = d3.selectAll('.name'),
+        departments = d3.selectAll('.department'),
+        directories = d3.selectAll('.directory');
+        
+        this.state.data.forEach((data) => {
+            if (clickedElement.localeCompare(data.Mitarbeitername) == 0 ||
+                clickedElement.localeCompare(data.Abteilung) == 0 ||
+                clickedElement.localeCompare(data.Target) == 0
+            )
+                relatedData.push(data);
+        });
+
+        connectedElements.names = this.getElementFromData(names,relatedData.map((d) => { return d.Mitarbeitername}));
+        connectedElements.departments = this.getElementFromData(departments,relatedData.map((d) => { return d.Abteilung}));
+        connectedElements.directories = this.getElementFromData(directories,relatedData.map((d) => { return d.Target.substring(1)}));
+        
+        return connectedElements;
     }
     
-    isLineConnectedToElement(lineNode,containerBox){
-         // checking the cors of connection of the lines and the elements
-                if (lineNode.attr('x1') <= (containerBox.x + containerBox.width) && containerBox.x <= lineNode.attr('x1') || 
-                    lineNode.attr('x2') <= (containerBox.x + containerBox.width) && containerBox.x <= lineNode.attr('x2'))
-                    if (lineNode.attr('y1') <= (containerBox.y + containerBox.height) && containerBox.y <= lineNode.attr('y1') ||
-                        lineNode.attr('y2') <= (containerBox.y + containerBox.height) && containerBox.y <= lineNode.attr('y2')
-                       )
-                       return true;
-        return false;
+    getElementFromData(elements,data){
+        return elements.filter((d) => {
+            // console.log(d)
+            let found = false;
+            // console.log(data)
+            for(let i = 0; i < data.length; i++)
+                if(d.localeCompare(data[i]) == 0){
+                    found = true;
+                    break;
+                }
+            if(found)
+                return d;
+        });
     }
 
     setHoverAnimation() {
@@ -75,18 +132,18 @@ export default class Graph extends Component {
             // check the lines that conected to the container
             let cLines = lines.filter(function(d, i) {
                 let lineNode = d3.select(this);
-                if(graph.isLineConnectedToElement(lineNode,containerBox))
-                        return this;
+                if (graph.isLineConnectedToElement(lineNode, containerBox))
+                    return this;
 
             }).classed('line-focus', true);
 
-        }).on('mouseout', function() {//set the hover red effect of the lines off
+        }).on('mouseout', function() { //set the hover red effect of the lines off
             let containerBox = d3.select(this).node().getBBox();
             // check the lines that conected to the container
             let cLines = lines.filter(function(d, i) {
                 let lineNode = d3.select(this);
-                if(graph.isLineConnectedToElement(lineNode,containerBox))
-                        return this;
+                if (graph.isLineConnectedToElement(lineNode, containerBox))
+                    return this;
 
             }).classed('line-focus', false);
         });
@@ -133,6 +190,7 @@ export default class Graph extends Component {
 
     renderWorkerNames() {
         let space = (this.getSvgHeight() * this.state.textSpace) / Object.keys(this.state.names).length;
+
         d3.select('svg').selectAll('g').data(Object.keys(this.state.names))
             .enter()
             .append("text")

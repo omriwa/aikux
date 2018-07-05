@@ -37,3 +37,7 @@ svg {
 text:hover {
   fill: red;
 }
+
+.hide {
+  visibility: hidden;
+}
