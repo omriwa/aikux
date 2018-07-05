@@ -59,19 +59,15 @@ export default class Graph extends Component {
 
     isLineConnectedToElement(lineNode, containerBox) {
         // checking the cors of connection of the lines and the elements
-        // if (lineNode.attr('x1') == (containerBox.x + containerBox.width) && containerBox.y == lineNode.attr('y1') ||
-        //     lineNode.attr('x2') == (containerBox.x + containerBox.width) && containerBox.y == lineNode.attr('y2')
-        //     )
-        if((containerBox.y <= lineNode.attr('y1') && 
-            lineNode.attr('y1') <= (containerBox.y + containerBox.height) && 
-            containerBox.x <= lineNode.attr('x1') && 
-            lineNode.attr('x1') <= (containerBox.x + containerBox.width))
-            ||
-            (containerBox.y <= lineNode.attr('y2') && 
-            lineNode.attr('y2') <= (containerBox.y + containerBox.height) && 
-            containerBox.x <= lineNode.attr('x2') && 
-            lineNode.attr('x2') <= (containerBox.x + containerBox.width)))
-                return true;
+        if ((containerBox.y <= lineNode.attr('y1') &&
+                lineNode.attr('y1') <= (containerBox.y + containerBox.height) &&
+                containerBox.x <= lineNode.attr('x1') &&
+                lineNode.attr('x1') <= (containerBox.x + containerBox.width)) ||
+            (containerBox.y <= lineNode.attr('y2') &&
+                lineNode.attr('y2') <= (containerBox.y + containerBox.height) &&
+                containerBox.x <= lineNode.attr('x2') &&
+                lineNode.attr('x2') <= (containerBox.x + containerBox.width)))
+            return true;
         return false;
     }
 
@@ -80,44 +76,55 @@ export default class Graph extends Component {
             graph = this;
 
         d3.selectAll('.container').on('click', function() {
-            // let connectElements = graph.getConnectedElements(d3.select(this).text()),
-            //     clickedElement = this;
-            let clickedElement = this;
+            let connectElements = graph.getConnectedElements(d3.select(this).text()),
+                clickedElement = this;
+
+            d3.selectAll('.container').classed('hide', true);
+            d3.select(this).classed('hide', false)
+
             // hide all lines that are not connected
-            lines.filter(function(){
-                if(!graph.isLineConnectedToElement(d3.select(this),d3.select(clickedElement).node().getBBox()))
+            lines.filter(function() {
+                if (!graph.isLineConnectedToElement(d3.select(this), d3.select(clickedElement).node().getBBox()))
                     return this;
-            }).each(function(){
-                if(d3.select(this).classed('hide'))
-                    d3.select(this).classed('hide',false)
+            }).each(function() {
+                let line = this;
+                if (d3.select(this).classed('hide'))
+                    d3.select(this).classed('hide', false)
                 else
-                    d3.select(this).classed('hide',true);
-            })
-            // // hide all the other elements
-            // d3.selectAll('.container').classed('hide',true);
-            // Object.values(connectElements).forEach(function(nodes){
-            //     nodes.each(function(){
-            //         d3.select(this).classed('hide',false);
-            //     });
-            // });
+                    d3.select(this).classed('hide', true);
+            });
+            
+            let connectedLines = lines.filter(function(){
+                if(!d3.select(this).classed('hide'))
+                    return this;
+            });
+            d3.selectAll('.container').filter(function(){
+                let connected = false;
+                let container = d3.select(this)
+                
+                connectedLines.each(function(){
+                    if(graph.isLineConnectedToElement(d3.select(this),container.node().getBBox()))
+                    connected = true;
+                });
+                
+                if(connected)
+                    return this;
+            }).classed('hide',false);
         });
-        // hide all the
     }
 
     getConnectedElements(clickedElement) {
-        let relatedData = [], 
+        let relatedData = [],
             connectedElements = {
-            names: [],
-            departments: [],
-            directories: [],
-            relatedData: relatedData
-        },
-        names = d3.selectAll('.name'),
-        departments = d3.selectAll('.department'),
-        directories = d3.selectAll('.directory');
-        
-        console.log(departments)
-        
+                names: [],
+                departments: [],
+                directories: [],
+                // clickedElement: clickedElement
+            },
+            names = d3.selectAll('.name'),
+            departments = d3.selectAll('.department'),
+            directories = d3.selectAll('.directory');
+
         this.state.data.forEach((data) => {
             if (clickedElement.localeCompare(data.Mitarbeitername) == 0 ||
                 clickedElement.localeCompare(data.Abteilung) == 0 ||
@@ -126,24 +133,23 @@ export default class Graph extends Component {
                 relatedData.push(data);
         });
 
-        connectedElements.names = this.getElementFromData(names,relatedData.map((d) => { return d.Mitarbeitername}));
-        connectedElements.departments = this.getElementFromData(departments,relatedData.map((d) => { return d.Abteilung}));
-        connectedElements.directories = this.getElementFromData(directories,relatedData.map((d) => { return d.Target.substring(1)}));
-        
+        connectedElements.names = this.getElementFromData(names, relatedData.map((d) => { return d.Mitarbeitername }));
+        connectedElements.departments = this.getElementFromData(departments, relatedData.map((d) => { return d.Abteilung }));
+        connectedElements.directories = this.getElementFromData(directories, relatedData.map((d) => { return d.Target.substring(1) }));
+
         return connectedElements;
     }
-    
-    getElementFromData(elements,data){
+
+    getElementFromData(elements, data) {
         return elements.filter((d) => {
-            // console.log(d)
             let found = false;
-            // console.log(data)
-            for(let i = 0; i < data.length; i++)
-                if(d.localeCompare(data[i]) == 0){
+
+            for (let i = 0; i < data.length; i++)
+                if (d.localeCompare(data[i]) == 0) {
                     found = true;
                     break;
                 }
-            if(found)
+            if (found)
                 return d;
         });
     }
