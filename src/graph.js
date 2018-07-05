@@ -59,11 +59,18 @@ export default class Graph extends Component {
 
     isLineConnectedToElement(lineNode, containerBox) {
         // checking the cors of connection of the lines and the elements
-        if (lineNode.attr('x1') <= (containerBox.x + containerBox.width) && containerBox.x <= lineNode.attr('x1') ||
-            lineNode.attr('x2') <= (containerBox.x + containerBox.width) && containerBox.x <= lineNode.attr('x2'))
-            if (lineNode.attr('y1') <= (containerBox.y + containerBox.height) && containerBox.y <= lineNode.attr('y1') ||
-                lineNode.attr('y2') <= (containerBox.y + containerBox.height) && containerBox.y <= lineNode.attr('y2')
-            )
+        // if (lineNode.attr('x1') == (containerBox.x + containerBox.width) && containerBox.y == lineNode.attr('y1') ||
+        //     lineNode.attr('x2') == (containerBox.x + containerBox.width) && containerBox.y == lineNode.attr('y2')
+        //     )
+        if((containerBox.y <= lineNode.attr('y1') && 
+            lineNode.attr('y1') <= (containerBox.y + containerBox.height) && 
+            containerBox.x <= lineNode.attr('x1') && 
+            lineNode.attr('x1') <= (containerBox.x + containerBox.width))
+            ||
+            (containerBox.y <= lineNode.attr('y2') && 
+            lineNode.attr('y2') <= (containerBox.y + containerBox.height) && 
+            containerBox.x <= lineNode.attr('x2') && 
+            lineNode.attr('x2') <= (containerBox.x + containerBox.width)))
                 return true;
         return false;
     }
@@ -72,16 +79,29 @@ export default class Graph extends Component {
         let lines = d3.selectAll('.line'),
             graph = this;
 
-        d3.selectAll('text').on('click', function(clickedElement) {
-            let connectElements = graph.getConnectedElements(clickedElement);
-            // hide all the other elements
-            d3.selectAll('.container').classed('hide',true);
-            Object.values(connectElements).forEach(function(nodes){
-                nodes.each(function(){
+        d3.selectAll('.container').on('click', function() {
+            // let connectElements = graph.getConnectedElements(d3.select(this).text()),
+            //     clickedElement = this;
+            let clickedElement = this;
+            // hide all lines that are not connected
+            lines.filter(function(){
+                if(!graph.isLineConnectedToElement(d3.select(this),d3.select(clickedElement).node().getBBox()))
+                    return this;
+            }).each(function(){
+                if(d3.select(this).classed('hide'))
                     d3.select(this).classed('hide',false)
-                });
+                else
+                    d3.select(this).classed('hide',true);
             })
+            // // hide all the other elements
+            // d3.selectAll('.container').classed('hide',true);
+            // Object.values(connectElements).forEach(function(nodes){
+            //     nodes.each(function(){
+            //         d3.select(this).classed('hide',false);
+            //     });
+            // });
         });
+        // hide all the
     }
 
     getConnectedElements(clickedElement) {
@@ -89,11 +109,14 @@ export default class Graph extends Component {
             connectedElements = {
             names: [],
             departments: [],
-            directories: []
+            directories: [],
+            relatedData: relatedData
         },
         names = d3.selectAll('.name'),
         departments = d3.selectAll('.department'),
         directories = d3.selectAll('.directory');
+        
+        console.log(departments)
         
         this.state.data.forEach((data) => {
             if (clickedElement.localeCompare(data.Mitarbeitername) == 0 ||
